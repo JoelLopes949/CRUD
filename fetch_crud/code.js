@@ -38,3 +38,94 @@ fetch(url)
     .then(response => response.json())
     .then(data => mostrar(data))
     .catch(error => console.log(error))
+
+
+const on = (element, event, selector, handler) => {
+    // console.log(element)
+    // console.log(event)
+    // console.log(selector)
+    // console.log(handler)
+    element.addEventListener(event, e => {
+        if (e.target.closest(selector)) {
+            handler(e)
+        }
+    })
+}
+
+// Procedimiento para eliminar un registro
+on(document, 'click', '.btnBorrar', e => {
+    const fila = e.target.parentNode.parentNode
+    const id = fila.firstElementChild.innerHTML
+    alertify.confirm("This is a confirm dialog.",
+    function(){
+        fetch(url + '/' + id, {
+            method: 'DELETE'
+        })
+        .then( res => res.json())
+        .then( () => location.reload())
+        // alertify.success('Ok');
+    },
+    function(){
+        alertify.error('Cancel');
+    });
+})
+
+// Procedimiento para editar un registro
+let idForm = 0
+on(document, 'click', '.btnEditar', e => {
+    const fila = e.target.parentNode.parentNode
+    idForm = fila.children[0].innerHTML
+    const descripcionForm = fila.children[1].innerHTML
+    const precioForm = fila.children[2].innerHTML
+    const stockForm = fila.children[3].innerHTML
+    descripcion.value = descripcionForm
+    precio.value = precioForm
+    stock.value = stockForm
+    opcion = 'editar'
+    modalArticulo.show()
+})
+
+// Procedimiento para crear o editar un registro
+formArticulo.addEventListener('submit', (e) => {
+    e.preventDefault()
+    if (opcion == 'crear') {
+       // console.log('crear')
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                descripcion: descripcion.value,
+                precio: precio.value,
+                stock: stock.value
+            })
+        })
+        .then( response => response.json())
+        .then( data => {
+            const nuevoArticulo = []
+            nuevoArticulo.push(data)
+            mostrar(nuevoArticulo)
+        })
+    }    
+    if (opcion == 'editar') {
+        // console.log('editar')
+        fetch(url + '/' + idForm, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                descripcion: descripcion.value,
+                precio: precio.value,
+                stock: stock.value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const articuloActualizado = [data]
+            mostrar(articuloActualizado)
+        })
+    }
+    modalArticulo.hide()
+})
